@@ -11,11 +11,11 @@ Please refer to this [blogpost](http://blog.madhukaraphatak.com/mesos-single-nod
 
 ## Build
 
-    sbt clean package
+    sbt clean assembly
     
 ## Running 
    ``` 
-   java -cp target/scala-2.11/distrubutedsystemfromscratch_2.11-1.0.jar 
+   java -cp target/scala-2.11/DistrubutedSystemFromScratch-assembly-1.0.jar 
    -Djava.library.path=$MESOS_HOME/src/.libs 
-   com.madhu.mesos.DistributedShell "/bin/echo hello" 
+   com.madhukaraphatak.mesos.helloworld.DistributedShell "/bin/echo hello" 
    ```
