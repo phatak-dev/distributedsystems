@@ -26,3 +26,4 @@ Code in the repository is divided into multiple branches for different parts of 
 refer to master branch.
 
 Part 1 - branch-p1
+Part 2 - branch-p2

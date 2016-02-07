@@ -1,21 +1,26 @@
 package com.madhukaraphatak.mesos.customexecutor
 
+import java.io.{File, FileInputStream, FileOutputStream}
 import java.util.{Collections, UUID}
 
 import com.google.protobuf.ByteString
+import com.madhukaraphatak.mesos.jarhandling.HttpServer
 import org.apache.mesos.Protos._
 import org.apache.mesos.{Scheduler, SchedulerDriver}
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
+import scala.collection.mutable.ArrayBuffer
 
 
 /**
- * Created by madhu on 30/9/14.
- */
-class TaskScheduler(mesosURL: String) extends Scheduler {
+  * Created by madhu on 30/9/14.
+  */
+class TaskScheduler(mesosURL: String,jars: Seq[String] = Nil) extends Scheduler {
 
   var _tasks = mutable.Queue[Task[_]]()
+  var jarServer: HttpServer = null
+  var jarUris: String = ""
 
   override def error(driver: SchedulerDriver, message: String) {}
 
@@ -34,10 +39,10 @@ class TaskScheduler(mesosURL: String) extends Scheduler {
   override def offerRescinded(driver: SchedulerDriver, offerId: OfferID) {}
 
   /**
-   *
-   * This callback is called when resources are available to  run tasks
-   *
-   */
+    *
+    * This callback is called when resources are available to  run tasks
+    *
+    */
   override def resourceOffers(driver: SchedulerDriver, offers: java.util.List[Offer]) {
 
     //for every available offer run tasks
@@ -63,7 +68,7 @@ class TaskScheduler(mesosURL: String) extends Scheduler {
           .addResources(cpus)
           .setData(ByteString.copyFrom(Utils.serialize(task)))
           .build()
-         driver.launchTasks(Collections.singleton(offer.getId), Collections.singleton(taskInfo))
+        driver.launchTasks(Collections.singleton(offer.getId), Collections.singleton(taskInfo))
 
       })
     }
@@ -79,14 +84,43 @@ class TaskScheduler(mesosURL: String) extends Scheduler {
     val scriptPath = System.getProperty("executor_script_path","~/run-executor.sh")
     ExecutorInfo.newBuilder().
       setCommand(CommandInfo.newBuilder().setValue("" +
-      "/bin/sh "+scriptPath))
+        "/bin/sh "+scriptPath+ s" $jarUris"))
       .setExecutorId(ExecutorID.newBuilder().setValue("1234"))
       .build()
   }
 
   override def reregistered(driver: SchedulerDriver, masterInfo: MasterInfo) {}
 
-  override def registered(driver: SchedulerDriver, frameworkId: FrameworkID, masterInfo: MasterInfo) {}
+  override def registered(driver: SchedulerDriver, frameworkId: FrameworkID, masterInfo: MasterInfo): Unit = {
+    //create the jar server if there are any jars have to be distributed
+    if(jars.size > 0 )  createJarServer()
+  }
+
+
+  def createJarServer() = {
+    val dirFile = Utils.createTempDir()
+    println("jar directory is" + dirFile.getAbsolutePath)
+    val fileNames = new ArrayBuffer[String]()
+    for ((path, index) <- jars.zipWithIndex) {
+      val file = new File(path)
+      val fileName = index + "_" + file.getName
+      copyFile(file, new File(dirFile, fileName))
+      fileNames += fileName
+    }
+
+    jarServer = new HttpServer(dirFile)
+    jarServer.start()
+    val uri = jarServer.uri
+    println("jar server started at " + uri)
+    jarUris = fileNames.map(f => uri + "/" + f).mkString(",")
+  }
+
+
+  private def copyFile(src: File, dest: File) = {
+    val srcFile = new FileInputStream(src)
+    val destFile = new FileOutputStream(dest)
+    Utils.copyStream(srcFile, destFile)
+  }
 
 
 }
