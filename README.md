@@ -19,3 +19,10 @@ Please refer to this [blogpost](http://blog.madhukaraphatak.com/mesos-single-nod
    -Djava.library.path=$MESOS_HOME/src/.libs 
    com.madhukaraphatak.mesos.helloworld.DistributedShell "/bin/echo hello" 
    ```
+   
+## Branches
+   
+Code in the repository is divided into multiple branches for different parts of the discussion. For latest,
+refer to master branch.
+
+Part 1 - branch-p1
