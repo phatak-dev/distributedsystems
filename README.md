@@ -25,5 +25,6 @@ Please refer to this [blogpost](http://blog.madhukaraphatak.com/mesos-single-nod
 Code in the repository is divided into multiple branches for different parts of the discussion. For latest,
 refer to master branch.
 
-Part 1 - branch-p1
-Part 2 - branch-p2
+* Part 1 - branch-p1
+
+* Part 2 - branch-p2
